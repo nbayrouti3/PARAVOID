@@ -108,11 +108,11 @@ public class Pathfinding : MonoBehaviour
             {
                 Debug.Log($"Curr's nodemap has node: {node.name}");
                 // run heuristic function
-                float h = Heuristic(curr, node.GetComponent<WaypointNode>(), curr.NodeMap[node.gameObject]);
+                //float h = Heuristic(curr, node.GetComponent<WaypointNode>(), curr.NodeMap[node.gameObject]);
 
                 node.GetComponent<WaypointNode>().ParentNode = curr;
 
-                open.Enqueue(node.GetComponent<WaypointNode>(), curr.NodeMap[node.gameObject] + h);
+                open.Enqueue(node.GetComponent<WaypointNode>(), curr.NodeMap[node.gameObject][1]);
                 Debug.Log($"{node.GetComponent<WaypointNode>().gameObject.name} enqueued to priority queue.");
             }
 
