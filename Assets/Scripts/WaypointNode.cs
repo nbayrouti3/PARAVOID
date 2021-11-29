@@ -23,6 +23,8 @@ public class WaypointNode : MonoBehaviour
     [SerializeField] private bool isTriggered;
     [SerializeField] private Pathfinding pf;
 
+    [SerializeField] private int numWalls = 0;
+
     // parent node
     private WaypointNode parentNode;
 
@@ -44,13 +46,13 @@ public class WaypointNode : MonoBehaviour
     /**
      * Store legal nodes for the path with their G-Values as a Dictionary
      */
-    private Dictionary<GameObject, float> _nodeMap;
+    private Dictionary<GameObject, float[]> _nodeMap;
 
     /// <summary>
     /// Access the NodeMap as a C# Property. Read-only outside of this
     /// class.
     /// </summary>
-    public Dictionary<GameObject, float> NodeMap
+    public Dictionary<GameObject, float[]> NodeMap
     {
         get
         {
@@ -65,7 +67,7 @@ public class WaypointNode : MonoBehaviour
     
     private void Awake()
     {
-        NodeMap = new Dictionary<GameObject, float>();
+        NodeMap = new Dictionary<GameObject, float[]>();
         ConnectNodes();
         Debug.Log($"Current Node: {this.gameObject.name}");
         foreach (GameObject node in NodeMap.Keys)
@@ -87,18 +89,45 @@ public class WaypointNode : MonoBehaviour
             
             if (!child.gameObject.Equals(this.gameObject))
             {
-                // If raycast doesn't hit something between waypoints, add Node to list
-                if (!Physics.Raycast(this.gameObject.transform.position,                        // Start position of raycast
-                    (child.position - this.gameObject.transform.position),                      // Direction of raycast
-                    (child.position - this.gameObject.transform.position).magnitude - 1f        // Max distance of raycast
-                    ))  
+
+                /**
+                 * How do we want to implement this part with RaycastAll?
+                 */
+                // Get the array of everything hit with the RaycastAll
+                RaycastHit[] raycastHits = Physics.RaycastAll(origin: this.gameObject.transform.position,
+                    direction: child.position - this.gameObject.transform.position,
+                    maxDistance: (child.position - this.gameObject.transform.position).magnitude,
+                    layerMask: ~0);
+
+                // If there's only one thing in the array, check if it's a waypoint
+                float g = 0, h = 0;
+                if (raycastHits.Length == 1 && raycastHits[0].collider.gameObject.CompareTag("Waypoint"))
                 {
+                    // If it is a waypoint, draw a green line for debugging purposes.
+                    g = (child.position - this.gameObject.transform.position).magnitude;
                     Debug.DrawRay(this.gameObject.transform.position,
                         child.position - this.gameObject.transform.position,
                         color: Color.green,
                         duration: Mathf.Infinity);
-                    NodeMap.Add(child.gameObject, (child.position - this.gameObject.transform.position).magnitude);
                 }
+                else
+                {
+                    // Otherwise, loop through the array and count the number of walls
+                    foreach (RaycastHit hitItem in raycastHits)
+                    {
+                        Debug.Log($"Raycast from {this.gameObject.name} hit {hitItem.collider.gameObject.name}");
+                        if (!hitItem.transform.gameObject.CompareTag("Waypoint"))
+                        {
+                            h++; 
+                        }
+                        else
+                        {
+                            g = (child.position - this.gameObject.transform.position).magnitude;
+                        }
+                    }
+                }
+                NodeMap.Add(child.gameObject, new float[2] { g, h });
+
             }
         }
 

@@ -13,6 +13,7 @@ TagManager:
   - Cup
   - InteractableSceneTransition
   - MovingPlatform
+  - Waypoint
   layers:
   - Default
   - TransparentFX
