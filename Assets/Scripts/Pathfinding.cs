@@ -31,6 +31,7 @@ public class Pathfinding : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // TODO: check how strict these constraints are and what StoppingDistance is set to
         if (!navMeshAgent.pathPending && navMeshAgent.remainingDistance == 0)
         {
             SetNextWaypoint();
@@ -43,15 +44,16 @@ public class Pathfinding : MonoBehaviour
     {
         if (currWaypoint >= path.Count)
         {
+            // this would be where we switch to attack state
             return;
         }
 
         navMeshAgent.SetDestination(path[currWaypoint].transform.position);
         currWaypoint++;
-        if (currWaypoint >= path.Count)
+        /*if (currWaypoint >= path.Count)
         {
             currWaypoint = 0;
-        }
+        }*/
     }
 
     void Astar(WaypointNode start)
@@ -110,9 +112,13 @@ public class Pathfinding : MonoBehaviour
                 // run heuristic function
                 //float h = Heuristic(curr, node.GetComponent<WaypointNode>(), curr.NodeMap[node.gameObject]);
 
+                // set node.ParentNode to curr for reconstruction
                 node.GetComponent<WaypointNode>().ParentNode = curr;
 
-                open.Enqueue(node.GetComponent<WaypointNode>(), curr.NodeMap[node.gameObject][1]);
+                // get g and h values for priority enqueue
+                float g = curr.NodeMap[node.gameObject][0];
+                float h = node.GetComponent<WaypointNode>().NodeMap[goal][1];     //h is numWalls between targ node and goal
+                open.Enqueue(node.GetComponent<WaypointNode>(), g + h);
                 Debug.Log($"{node.GetComponent<WaypointNode>().gameObject.name} enqueued to priority queue.");
             }
 
@@ -131,12 +137,12 @@ public class Pathfinding : MonoBehaviour
         
     }*/
 
-    public int Heuristic(WaypointNode parent, WaypointNode node, float max_dist)
+    /*public int Heuristic(WaypointNode parent, WaypointNode node, float max_dist)
     {
         Vector3 direction = node.transform.position - parent.transform.position;
 
         return Physics.RaycastAll(parent.transform.position, direction, max_dist).Length;
-    }
+    }*/
 
     List<WaypointNode> ReconstructPath(WaypointNode start, WaypointNode end)
     {
